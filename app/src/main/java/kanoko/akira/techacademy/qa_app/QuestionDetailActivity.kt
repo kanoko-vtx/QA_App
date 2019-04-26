@@ -1,10 +1,14 @@
 package kanoko.akira.techacademy.qa_app
 
 import android.content.Intent
+import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.support.design.widget.DrawableUtils
 import android.support.design.widget.FloatingActionButton
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.View
+import android.widget.ImageView
 import android.widget.ListView
 
 import com.google.firebase.auth.FirebaseAuth
@@ -14,7 +18,9 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import kotlinx.android.synthetic.*
 import kotlinx.android.synthetic.main.activity_question_detail.*
+import kotlinx.android.synthetic.main.list_question_detail.*
 
 import java.util.HashMap
 
@@ -23,6 +29,9 @@ class QuestionDetailActivity : AppCompatActivity() {
     private lateinit var mQuestion: Question
     private lateinit var mAdapter: QuestionDetailListAdapter
     private lateinit var mAnswerRef: DatabaseReference
+
+    // お気に入り用のフラグ 初期値はfalse
+    private var favstatus: Boolean = false
 
     private val mEventListener = object : ChildEventListener {
         override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
@@ -94,8 +103,29 @@ class QuestionDetailActivity : AppCompatActivity() {
             }
         }
 
-        val dataBaseReference = FirebaseDatabase.getInstance().reference
-        mAnswerRef = dataBaseReference.child(ContentsPATH).child(mQuestion.genre.toString()).child(mQuestion.questionUid).child(AnswersPATH)
-        mAnswerRef.addChildEventListener(mEventListener)
+        // お気に入りボタンの処理
+        fav.setOnClickListener(object:View.OnClickListener {
+            override fun onClick(v: View?) {
+                val fav = findViewById(R.id.fav) as ImageView
+                if (favstatus) {
+                    // お気に入りから削除
+                    // ボタンを切り替え
+                    fav.setImageResource(R.drawable.fav_off)
+                    // フラグを切り替え
+                    favstatus = false
+                } else {
+                    // お気に入りに追加
+                    // ボタンを切り替え
+                    fav.setImageResource(R.drawable.fav_on)
+                    // フラグを切り替え
+                    favstatus = true
+                }
+            }
+        }
+        )
+
+            val dataBaseReference = FirebaseDatabase.getInstance().reference
+            mAnswerRef = dataBaseReference.child(ContentsPATH).child(mQuestion.genre.toString()).child(mQuestion.questionUid).child(AnswersPATH)
+            mAnswerRef.addChildEventListener(mEventListener)
     }
 }
