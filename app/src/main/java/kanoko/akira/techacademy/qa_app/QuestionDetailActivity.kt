@@ -118,6 +118,19 @@ class QuestionDetailActivity : AppCompatActivity() {
                     val fav = findViewById(R.id.fav) as ImageView
                     if (favstatus) {
                         // お気に入りから削除
+                        // データベースへ接続
+                        val database = FirebaseDatabase.getInstance()
+                        val ref = database.getReference(FavlistPATH)
+
+                        // 削除
+                        var questionuid = mQuestion.questionUid
+                        var user = user.uid
+
+                        Log.d("qaapplog","userid : $user")
+                        Log.d("qaapplog","questuibud ; $questionuid")
+
+                        ref.child("$user").child("fav").child("$questionuid").setValue(null)
+
                         // ボタンを切り替え
                         fav.setImageResource(R.drawable.fav_off)
                         // フラグを切り替え
@@ -140,7 +153,9 @@ class QuestionDetailActivity : AppCompatActivity() {
                         Log.d("qaapplog","userid : $user")
                         Log.d("qaapplog","questuibud ; $questionuid")
 
-                        ref.child("$user/fav").child("uqid").push().setValue(questionuid)
+                        ref.child("$user").child("fav").child("$questionuid").setValue(questionuid)
+//                        ref.child("$user").child("fav").push().child("quid").setValue(questionuid)
+//                        ref.child("$user/fav").child("uqid").push().setValue(questionuid)
                     }
                 }
             }
