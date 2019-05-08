@@ -106,19 +106,42 @@ class QuestionDetailActivity : AppCompatActivity() {
         // お気に入りボタンの処理
         fav.setOnClickListener(object:View.OnClickListener {
             override fun onClick(v: View?) {
-                val fav = findViewById(R.id.fav) as ImageView
-                if (favstatus) {
-                    // お気に入りから削除
-                    // ボタンを切り替え
-                    fav.setImageResource(R.drawable.fav_off)
-                    // フラグを切り替え
-                    favstatus = false
+                // ログイン済みのユーザーを取得する
+                val user = FirebaseAuth.getInstance().currentUser
+
+                if (user == null) {
+                    // ログインしていなければログイン画面に遷移させる
+                    val intent = Intent(applicationContext, LoginActivity::class.java)
+                    startActivity(intent)
                 } else {
-                    // お気に入りに追加
-                    // ボタンを切り替え
-                    fav.setImageResource(R.drawable.fav_on)
-                    // フラグを切り替え
-                    favstatus = true
+                    // ログインしていたらお気に入りボタン処理
+                    val fav = findViewById(R.id.fav) as ImageView
+                    if (favstatus) {
+                        // お気に入りから削除
+                        // ボタンを切り替え
+                        fav.setImageResource(R.drawable.fav_off)
+                        // フラグを切り替え
+                        favstatus = false
+                    } else {
+                        // お気に入りに追加
+                        // ボタンを切り替え
+                        fav.setImageResource(R.drawable.fav_on)
+                        // フラグを切り替え
+                        favstatus = true
+
+                        // データベースへ接続
+                        val database = FirebaseDatabase.getInstance()
+                        val ref = database.getReference(FavlistPATH)
+
+                        // 書き込み
+                        var questionuid = mQuestion.questionUid
+                        var user = user.uid
+
+                        Log.d("qaapplog","userid : $user")
+                        Log.d("qaapplog","questuibud ; $questionuid")
+
+                        ref.child("$user/fav").child("uqid").push().setValue(questionuid)
+                    }
                 }
             }
         }
