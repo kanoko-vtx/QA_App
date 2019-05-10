@@ -3,6 +3,7 @@ package kanoko.akira.techacademy.qa_app
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.support.constraint.solver.widgets.Snapshot
 import android.support.design.widget.DrawableUtils
 import android.support.design.widget.FloatingActionButton
 import android.support.v7.app.AppCompatActivity
@@ -13,11 +14,7 @@ import android.widget.ListView
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.database.ChildEventListener
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.*
 import kotlinx.android.synthetic.*
 import kotlinx.android.synthetic.main.activity_question_detail.*
 import kotlinx.android.synthetic.main.list_question_detail.*
@@ -87,6 +84,31 @@ class QuestionDetailActivity : AppCompatActivity() {
         listView.adapter = mAdapter
         mAdapter.notifyDataSetChanged()
 
+        //お気に入りに入っているか確認
+        var questionuid = mQuestion.questionUid
+
+        var database = FirebaseDatabase.getInstance().getReference(FavlistPATH)
+
+        database.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                // Get Post object and use the values to update the UI
+                val dbquid = dataSnapshot.value.toString()
+                // ...
+                Log.d("qaapplog", "画面表示 $dbquid")
+                // ボタンをオンにする
+//                fav.setImageResource(R.drawable.fav_on)
+                // フラグを切り替え
+//                favstatus = true
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                // Getting Post failed, log a message
+                Log.d("qaapplog", "loadPost:onCancelled", databaseError.toException())
+                // ...
+            }
+        })
+
+
         fab.setOnClickListener {
             // ログイン済みのユーザーを取得する
             val user = FirebaseAuth.getInstance().currentUser
@@ -126,8 +148,8 @@ class QuestionDetailActivity : AppCompatActivity() {
                         var questionuid = mQuestion.questionUid
                         var user = user.uid
 
-                        Log.d("qaapplog","userid : $user")
-                        Log.d("qaapplog","questuibud ; $questionuid")
+                        Log.d("qaapplog","オフ userid : $user")
+                        Log.d("qaapplog","オフ questuibud ; $questionuid")
 
                         ref.child("$user").child("fav").child("$questionuid").setValue(null)
 
@@ -150,12 +172,10 @@ class QuestionDetailActivity : AppCompatActivity() {
                         var questionuid = mQuestion.questionUid
                         var user = user.uid
 
-                        Log.d("qaapplog","userid : $user")
-                        Log.d("qaapplog","questuibud ; $questionuid")
+                        Log.d("qaapplog","オン userid : $user")
+                        Log.d("qaapplog","オン questuibud ; $questionuid")
 
                         ref.child("$user").child("fav").child("$questionuid").setValue(questionuid)
-//                        ref.child("$user").child("fav").push().child("quid").setValue(questionuid)
-//                        ref.child("$user/fav").child("uqid").push().setValue(questionuid)
                     }
                 }
             }
