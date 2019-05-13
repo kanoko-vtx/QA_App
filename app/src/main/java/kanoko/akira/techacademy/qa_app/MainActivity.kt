@@ -15,8 +15,10 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import android.support.design.widget.Snackbar
 import android.util.Base64
+import android.util.Log
 import android.widget.ListView
 import com.google.firebase.database.*
+import kotlinx.android.synthetic.*
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
@@ -154,6 +156,29 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             val intent = Intent(applicationContext, QuestionDetailActivity::class.java)
             intent.putExtra("question", mQuestionArrayList[position])
             startActivity(intent)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val navigationView = findViewById<NavigationView>(R.id.nav_view)
+
+        // ログイン済みのユーザーを取得する
+        val user = FirebaseAuth.getInstance().currentUser
+
+        if (user == null) {
+            // ログインしていなければお気に入りメニュー非表示
+            navigationView.menu.getItem(4).setVisible(false)
+            Log.d("qaapplog", "メニュー非表示")
+        } else {
+            // ログインしていなければお気に入りメニュー非表示
+            navigationView.menu.getItem(4).setVisible(true)
+            Log.d("qaapplog", "メニュー表示")
+        }
+
+        // 1:趣味を既定の選択とする
+        if(mGenre == 0) {
+            onNavigationItemSelected(navigationView.menu.getItem(0))
         }
     }
 
