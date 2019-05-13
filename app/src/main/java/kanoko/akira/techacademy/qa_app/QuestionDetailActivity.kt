@@ -9,6 +9,8 @@ import android.support.design.widget.FloatingActionButton
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
+import android.view.View.GONE
+import android.view.View.VISIBLE
 import android.widget.ImageView
 import android.widget.ListView
 
@@ -16,8 +18,10 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.*
 import kotlinx.android.synthetic.*
+import kotlinx.android.synthetic.main.activity_login.*
 import kotlinx.android.synthetic.main.activity_question_detail.*
 import kotlinx.android.synthetic.main.list_question_detail.*
+import kotlinx.android.synthetic.main.list_questions.view.*
 
 import java.util.HashMap
 
@@ -84,40 +88,53 @@ class QuestionDetailActivity : AppCompatActivity() {
         listView.adapter = mAdapter
         mAdapter.notifyDataSetChanged()
 
-        //お気に入りに入っているか確認
-        // 質問IDを取得
-        var questionuid = mQuestion.questionUid
+
+        // ログインしているか
         // ログイン済みのユーザーを取得する
         val loginuser = FirebaseAuth.getInstance().currentUser
-        var user = loginuser?.uid
-        Log.d("qaapplog","$user")
+        if (loginuser == null) {
+            // ログインしていなければボタンを非表示
+            val fav = findViewById(R.id.fav) as ImageView
+            fav.setImageDrawable(null)
+        } else {
+            //お気に入りに入っているか確認
+            // 質問IDを取得
+            var questionuid = mQuestion.questionUid
+            var user = loginuser?.uid
+            Log.d("qaapplog", "$user")
 
-        // 読み出し先のパスを指定
-        var database = FirebaseDatabase.getInstance().getReference(FavlistPATH).child("$user").child("fav")
+            // 読み出し先のパスを指定
+            var database = FirebaseDatabase.getInstance().getReference(FavlistPATH).child("$user").child("fav")
 
-        database.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                // Get Post object and use the values to update the UI
-                val dbquid = dataSnapshot.value.toString()
-                // ...
-                Log.d("qaapplog", "画面表示 $dbquid")
+            database.addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    // Get Post object and use the values to update the UI
+                    val dbquid = dataSnapshot.value.toString()
+                    // ...
+                    Log.d("qaapplog", "画面表示 $dbquid")
 
-                Log.d( "qaapplog", dbquid.contains(questionuid).toString())
+                    Log.d("qaapplog", dbquid.contains(questionuid).toString())
 
-                if (questionuid in dbquid) {
-                    // ボタンをオンにする
-                    fav.setImageResource(R.drawable.fav_on)
-                    // フラグを切り替え
-                    favstatus = true
+                    if (questionuid in dbquid) {
+                        // ボタンをオンにする
+                        fav.setImageResource(R.drawable.fav_on)
+                        // フラグを切り替え
+                        favstatus = true
+                    } else {
+                        // ボタンをオフにする
+                        fav.setImageResource(R.drawable.fav_off)
+                        // フラグを切り替え
+                        favstatus = false
+                    }
                 }
-            }
 
-            override fun onCancelled(databaseError: DatabaseError) {
-                // Getting Post failed, log a message
-                Log.d("qaapplog", "loadPost:onCancelled", databaseError.toException())
-                // ...
-            }
-        })
+                override fun onCancelled(databaseError: DatabaseError) {
+                    // Getting Post failed, log a message
+                    Log.d("qaapplog", "loadPost:onCancelled", databaseError.toException())
+                    // ...
+                }
+            })
+        }
 
 
         fab.setOnClickListener {
