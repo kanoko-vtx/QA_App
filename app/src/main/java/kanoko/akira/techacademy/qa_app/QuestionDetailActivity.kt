@@ -85,9 +85,15 @@ class QuestionDetailActivity : AppCompatActivity() {
         mAdapter.notifyDataSetChanged()
 
         //お気に入りに入っているか確認
+        // 質問IDを取得
         var questionuid = mQuestion.questionUid
+        // ログイン済みのユーザーを取得する
+        val loginuser = FirebaseAuth.getInstance().currentUser
+        var user = loginuser?.uid
+        Log.d("qaapplog","$user")
 
-        var database = FirebaseDatabase.getInstance().getReference(FavlistPATH)
+        // 読み出し先のパスを指定
+        var database = FirebaseDatabase.getInstance().getReference(FavlistPATH).child("$user").child("fav")
 
         database.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
@@ -95,10 +101,15 @@ class QuestionDetailActivity : AppCompatActivity() {
                 val dbquid = dataSnapshot.value.toString()
                 // ...
                 Log.d("qaapplog", "画面表示 $dbquid")
-                // ボタンをオンにする
-//                fav.setImageResource(R.drawable.fav_on)
-                // フラグを切り替え
-//                favstatus = true
+
+                Log.d( "qaapplog", dbquid.contains(questionuid).toString())
+
+                if (questionuid in dbquid) {
+                    // ボタンをオンにする
+                    fav.setImageResource(R.drawable.fav_on)
+                    // フラグを切り替え
+                    favstatus = true
+                }
             }
 
             override fun onCancelled(databaseError: DatabaseError) {
