@@ -41,30 +41,11 @@ class FavList : AppCompatActivity() {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
 
                 for (data in dataSnapshot.children) {
+                    Log.d("qaapplog", "$data")
+                    var qid = data.key!!.toString()
                     var catnum = data.value!!.toString()[7]
+                    Log.d("qaapplog", "質問ID $qid")
                     Log.d("qaapplog", "カテゴリ番号 $catnum")
-
-                    // 読み出し先のパスを再指定 +カテゴリ番号
-                    //var database2 = FirebaseDatabase.getInstance().getReference(FavlistPATH).child("$userid").child("$catnum")
-                    //Log.d("qaapplog", database2.toString())
-
-                    database.child("catnum").addValueEventListener(object : ValueEventListener {
-                        override fun onDataChange(dataSnapshot: DataSnapshot) {
-                            Log.d("qaapplog", "2つめのリスナー")
-
-                            var test = dataSnapshot.getValue(String::class.java)
-                            Log.d("qaapplog", "$test")
-
-                            for (data in dataSnapshot.children) {
-                                Log.d("qaapplog", "ok")
-                                Log.d("qaapplog", data.value!!.toString())
-                            }
-                        }
-                        override fun onCancelled(databaseError: DatabaseError) {
-                            Log.d("qaapplog", "error")
-                        }
-                    })
-                    Log.d("qaapplog", "カテゴリ番号取得ループ")
                 }
 
             }
