@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.support.constraint.solver.widgets.Snapshot
 import android.support.design.widget.DrawableUtils
 import android.support.design.widget.FloatingActionButton
+import android.support.design.widget.NavigationView
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
@@ -88,33 +89,28 @@ class QuestionDetailActivity : AppCompatActivity() {
         listView.adapter = mAdapter
         mAdapter.notifyDataSetChanged()
 
-
         // ログインしているか
         // ログイン済みのユーザーを取得する
-        val loginuser = FirebaseAuth.getInstance().currentUser
-        if (loginuser == null) {
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user == null) {
             // ログインしていなければボタンを非表示
             val fav = findViewById(R.id.fav) as ImageView
             fav.setImageDrawable(null)
         } else {
             //お気に入りに入っているか確認
             // 質問IDを取得
-            var questionuid = mQuestion.questionUid
-            var user = loginuser?.uid
-            Log.d("qaapplog", "$user")
+            val questionuid = mQuestion.questionUid
+            val userid = user?.uid
+            val genre = mQuestion.genre.toInt()
+            Log.d("qaapplog", "$userid")
 
             // 読み出し先のパスを指定
-            var database = FirebaseDatabase.getInstance().getReference(FavlistPATH).child("$user").child("fav")
+            var database = FirebaseDatabase.getInstance().getReference(FavlistPATH).child("$userid")
 
             database.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
                     // Get Post object and use the values to update the UI
                     val dbquid = dataSnapshot.value.toString()
-                    // ...
-                    Log.d("qaapplog", "画面表示 $dbquid")
-
-                    Log.d("qaapplog", dbquid.contains(questionuid).toString())
-
                     if (questionuid in dbquid) {
                         // ボタンをオンにする
                         fav.setImageResource(R.drawable.fav_on)
@@ -136,7 +132,7 @@ class QuestionDetailActivity : AppCompatActivity() {
             })
         }
 
-
+        // 質問追加ボタンの処理
         fab.setOnClickListener {
             // ログイン済みのユーザーを取得する
             val user = FirebaseAuth.getInstance().currentUser
@@ -158,60 +154,88 @@ class QuestionDetailActivity : AppCompatActivity() {
             override fun onClick(v: View?) {
                 // ログイン済みのユーザーを取得する
                 val user = FirebaseAuth.getInstance().currentUser
+                // データベースへ接続
+                val database = FirebaseDatabase.getInstance()
+                // お気に入りのパス
+                val ref = database.getReference(FavlistPATH)
+                // お気に入り画像を取得
+                val fav = findViewById(R.id.fav) as ImageView
+                // 読み書きする値を取得
+                val questionuid = mQuestion.questionUid
+                val userid = user?.uid
+                val genre = mQuestion.genre.toInt()
 
                 if (user == null) {
-                    // ログインしていなければログイン画面に遷移させる
+                    // ログインしていない
+                    // ログイン画面へ飛ばす
                     val intent = Intent(applicationContext, LoginActivity::class.java)
                     startActivity(intent)
                 } else {
-                    // ログインしていたらお気に入りボタン処理
-                    val fav = findViewById(R.id.fav) as ImageView
+                    // ログインしている
                     if (favstatus) {
                         // お気に入りから削除
-                        // データベースへ接続
-                        val database = FirebaseDatabase.getInstance()
-                        val ref = database.getReference(FavlistPATH)
-
-                        // 削除
-                        var questionuid = mQuestion.questionUid
-                        var user = user.uid
-
-                        Log.d("qaapplog","オフ userid : $user")
-                        Log.d("qaapplog","オフ questuibud ; $questionuid")
-
-                        ref.child("$user").child("fav").child("$questionuid").setValue(null)
-
+                        ref.child("$userid").child("$questionuid").setValue(null)
                         // ボタンを切り替え
                         fav.setImageResource(R.drawable.fav_off)
-                        // フラグを切り替え
-                        favstatus = false
                     } else {
                         // お気に入りに追加
+                        ref.child("$userid").child("$questionuid").child("genre").setValue("$genre")
                         // ボタンを切り替え
                         fav.setImageResource(R.drawable.fav_on)
-                        // フラグを切り替え
-                        favstatus = true
-
-                        // データベースへ接続
-                        val database = FirebaseDatabase.getInstance()
-                        val ref = database.getReference(FavlistPATH)
-
-                        // 書き込み
-                        var questionuid = mQuestion.questionUid
-                        var user = user.uid
-
-                        Log.d("qaapplog","オン userid : $user")
-                        Log.d("qaapplog","オン questuibud ; $questionuid")
-
-                        ref.child("$user").child("fav").child("$questionuid").setValue(questionuid)
                     }
                 }
             }
-        }
-        )
+        })
 
-            val dataBaseReference = FirebaseDatabase.getInstance().reference
-            mAnswerRef = dataBaseReference.child(ContentsPATH).child(mQuestion.genre.toString()).child(mQuestion.questionUid).child(AnswersPATH)
-            mAnswerRef.addChildEventListener(mEventListener)
+        val dataBaseReference = FirebaseDatabase.getInstance().reference
+        mAnswerRef = dataBaseReference.child(ContentsPATH).child(mQuestion.genre.toString()).child(mQuestion.questionUid).child(AnswersPATH)
+        mAnswerRef.addChildEventListener(mEventListener)
     }
+
+    override fun onResume() {
+        super.onResume()
+
+        // ログインしているか
+        // ログイン済みのユーザーを取得する
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user == null) {
+            // ログインしていなければボタンを非表示
+            val fav = findViewById(R.id.fav) as ImageView
+            fav.setImageDrawable(null)
+        } else {
+            //お気に入りに入っているか確認
+            // 質問IDを取得
+            val questionuid = mQuestion.questionUid
+            val userid = user?.uid
+            val genre = mQuestion.genre.toInt()
+
+            // 読み出し先のパスを指定
+            var database = FirebaseDatabase.getInstance().getReference(FavlistPATH).child("$userid").child("fav").child("$genre")
+
+            database.addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    // Get Post object and use the values to update the UI
+                    val dbquid = dataSnapshot.value.toString()
+                    if (questionuid in dbquid) {
+                        // ボタンをオンにする
+                        fav.setImageResource(R.drawable.fav_on)
+                        // フラグを切り替え
+                        favstatus = true
+                    } else {
+                        // ボタンをオフにする
+                        fav.setImageResource(R.drawable.fav_off)
+                        // フラグを切り替え
+                        favstatus = false
+                    }
+                }
+
+                override fun onCancelled(databaseError: DatabaseError) {
+                    // Getting Post failed, log a message
+                    Log.d("qaapplog", "loadPost:onCancelled", databaseError.toException())
+                    // ...
+                }
+            })
+        }
+    }
+
 }

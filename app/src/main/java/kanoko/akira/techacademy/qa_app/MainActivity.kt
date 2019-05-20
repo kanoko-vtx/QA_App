@@ -16,9 +16,11 @@ import com.google.firebase.auth.FirebaseUser
 import android.support.design.widget.Snackbar
 import android.util.Base64
 import android.util.Log
+import android.widget.ImageView
 import android.widget.ListView
 import com.google.firebase.database.*
 import kotlinx.android.synthetic.*
+import kotlinx.android.synthetic.main.activity_question_detail.*
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
@@ -161,19 +163,20 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onResume() {
         super.onResume()
+
         val navigationView = findViewById<NavigationView>(R.id.nav_view)
 
         // ログイン済みのユーザーを取得する
         val user = FirebaseAuth.getInstance().currentUser
 
         if (user == null) {
-            // ログインしていなければお気に入りメニュー非表示
+            // ログインしていない
+            // お気に入りメニュー非表示
             navigationView.menu.getItem(4).setVisible(false)
-            Log.d("qaapplog", "メニュー非表示")
         } else {
-            // ログインしていなければお気に入りメニュー非表示
+            // ログインしている
+            // お気に入りメニュー非表示
             navigationView.menu.getItem(4).setVisible(true)
-            Log.d("qaapplog", "メニュー表示")
         }
 
         // 1:趣味を既定の選択とする
@@ -216,8 +219,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             mToolbar.title = "コンピューター"
             mGenre = 4
         } else if (id == R.id.nav_fav) {
+
             val intent = Intent(this, FavList::class.java)
             startActivity(intent)
+
         }
 
         val drawer = findViewById<DrawerLayout>(R.id.drawer_layout)
