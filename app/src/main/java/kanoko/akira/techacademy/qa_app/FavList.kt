@@ -1,8 +1,10 @@
 package kanoko.akira.techacademy.qa_app
 
 import android.R
+import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.widget.ArrayAdapter
 import android.widget.ListView
@@ -16,27 +18,17 @@ import kotlinx.android.synthetic.main.content_main.*
 
 class FavList : AppCompatActivity() {
 
-    private val texts = arrayOf(
-        "abc ", "bcd", "cde", "def", "efg",
-        "fgh", "ghi", "hij", "ijk", "jkl", "klm"
-    )
-
-    data class Fav(var uid:String ="" , var cat:Int = 0)
-//    private var favlists = ArrayList<String>()
+    private var favlists = ArrayList<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val listView = ListView(this)
-        setContentView(listView)
-
-        // ログインしているか
         // ログイン済みのユーザーを取得する
         val user = FirebaseAuth.getInstance().currentUser
         val userid = user!!.uid
-        // 読み出し先のパスを指定
-        var database = FirebaseDatabase.getInstance().getReference(FavlistPATH).child("$userid")
 
+        // カテゴリID、記事IDの取得
+        var database = FirebaseDatabase.getInstance().getReference(FavlistPATH).child("$userid")
         database.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
 
@@ -44,20 +36,36 @@ class FavList : AppCompatActivity() {
                     Log.d("qaapplog", "$data")
                     var qid = data.key!!.toString()
                     var catnum = data.value!!.toString()[7]
-                    Log.d("qaapplog", "質問ID $qid")
-                    Log.d("qaapplog", "カテゴリ番号 $catnum")
+
+                    // 取得したカテゴリID、記事IDを元に記事タイトルを取得
+                    var database2 = FirebaseDatabase.getInstance().getReference(ContentsPATH).child("$catnum").child("$qid")
+                    database2.addValueEventListener(object : ValueEventListener {
+                        override fun onDataChange(dataSnapshot2: DataSnapshot) {
+                            var qtitle = dataSnapshot2.child("title").getValue().toString()
+                            Log.d("qaapplog", "タイトル $qtitle")
+                            // リストビュー用の配列に入れる
+                            favlists.add("$qtitle")
+                            Log.d("qaapplog","$favlists")
+                        }
+                        override fun onCancelled(databaseError: DatabaseError) {
+                        }
+                    })
                 }
 
             }
             override fun onCancelled(databaseError: DatabaseError) {
-                Log.d("qaapplog", "1st roop error")
             }
         })
 
-        val arrayAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, texts)
+        val listView = ListView(this)
+        setContentView(listView)
 
-//        val arrayAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, dbquid)
-        listView.setAdapter(arrayAdapter)
+        Handler().postDelayed(Runnable {
+                Log.d("qaapplog","リストビューの前 $favlists")
+                val arrayAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, favlists)
+                listView.setAdapter(arrayAdapter)
+        }, 1000)
 
     }
+
 }
